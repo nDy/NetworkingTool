@@ -49,3 +49,6 @@ Limitaciones:
 	El demo ha sido probado solo con TCP en su totalidad, al parecer UDP no es soportado 
 	por la funcion que utilizamos para el binding de los puertos, zmq_bind, trabajaremos 
 	para solucionar esto de ser posible.
+
+	Tama;o de mensaje para mensajes peque;os:
+		Max: 29 bytes (esta definido dentro del codigo fuente de ZeroMQ)

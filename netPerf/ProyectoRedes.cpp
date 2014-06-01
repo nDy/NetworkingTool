@@ -291,6 +291,10 @@ printf("messagesize %d\n",message_size);
 		const char *connect_to;
 
 		int message_count;
+		void *watch;
+		unsigned long elapsed;
+		unsigned long throughput;
+		double megabits;
 
 		connect_to = argv[1];
 		message_size = atoi(argv[2]);
@@ -314,6 +318,8 @@ printf("messagesize %d\n",message_size);
 			return -1;
 		}
 
+//watch
+		watch = zmq_stopwatch_start();
 		for (i = 0; i != message_count; i++) {
 			rc = zmq_msg_init_size(&msg, message_size);
 			if (rc != 0) {
@@ -331,6 +337,19 @@ printf("messagesize %d\n",message_size);
 				return -1;
 			}
 		}
+
+		elapsed = zmq_stopwatch_stop(watch);
+		if (elapsed == 0)
+			elapsed = 1;
+		
+		throughput = (unsigned long) ((double) message_count / (double) elapsed
+				* 1000000);
+		megabits = (double) (throughput * message_size * 8) / 1000000;
+
+		printf("message size: %d [B]\n", (int) message_size);
+		printf("message count: %d\n", (int) message_count);
+		printf("mean throughput: %d [msg/s]\n", (int) throughput);
+		printf("mean throughput: %.3f [Mb/s]\n", (double) megabits);
 
 		rc = zmq_close(s);
 		if (rc != 0) {
