@@ -18,10 +18,11 @@ public:
     ~MainWindow();
 
 private:
-    void _update(QLabel*&, QLabel*&, QLabel*&);
+    void _update();
 
     Ui::MainWindow *ui;
     QTimer* t;
+    QTimer* interval;
     bool working;
     //zmq
     int msgCount;
@@ -41,6 +42,7 @@ private:
 public slots:
     void start();
     void update();
+    void tpCalc();
 };
 
 #endif // MAINWINDOW_H
