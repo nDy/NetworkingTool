@@ -42,7 +42,6 @@ private:
 public slots:
     void start();
     void update();
-    void tpCalc();
 };
 
 #endif // MAINWINDOW_H

@@ -149,6 +149,7 @@ int main(int argc, char *argv[]) {
 		watch = zmq_stopwatch_start();
 
 		for (i = 0; i != roundtrip_count; i++) {
+			watch = zmq_stopwatch_start();
 			rc = zmq_send(s, &msg,message_size, 0);
 			if (rc < 0) {
 				printf("error in zmq_sendmsg: %s\n", zmq_strerror(errno));
@@ -159,12 +160,13 @@ int main(int argc, char *argv[]) {
 				printf("error in zmq_recvmsg: %s\n", zmq_strerror(errno));
 				return -1;
 			}
-printf("zmqmsgsize %d\n",zmq_msg_size(&msg));
-printf("messagesize %d\n",message_size);
 			if (zmq_msg_size(&msg) != message_size) {
 				printf("message of incorrect size received\n");
 				return -1;
 			}
+			elapsed = zmq_stopwatch_stop(watch);
+			printf("latency:%d",elapsed);
+			elapsed = 0;
 		}
 
 		elapsed = zmq_stopwatch_stop(watch);
@@ -177,9 +179,9 @@ printf("messagesize %d\n",message_size);
 
 		latency = (double) elapsed / (roundtrip_count * 2);
 
-		printf("message size: %d [B]\n", (int) message_size);
-		printf("roundtrip count: %d\n", (int) roundtrip_count);
-		printf("average latency: %.3f [us]\n", (double) latency);
+		printf("msgSize:%d\n", (int) message_size);
+		printf("roundCount: %d\n", (int) roundtrip_count);
+		printf("averageLatency: %.3f\n", (double) latency);
 
 		rc = zmq_close(s);
 		if (rc != 0) {
@@ -388,6 +390,7 @@ printf("messagesize %d\n",message_size);
 		watch = zmq_stopwatch_start();
 
 		for (i = 0; i != roundtrip_count; i++) {
+			watch = zmq_stopwatch_start();
 			rc = zmq_send(s, &msg,message_size, 0);
 			if (rc < 0) {
 				printf("error in zmq_sendmsg: %s\n", zmq_strerror(errno));
@@ -402,9 +405,12 @@ printf("messagesize %d\n",message_size);
 				printf("message of incorrect size received\n");
 				return -1;
 			}
+			elapsed = zmq_stopwatch_stop(watch);
+			printf("latency:%d",elapsed);
+			elapsed = 0;
 		}
 
-		elapsed = zmq_stopwatch_stop(watch);
+		
 
 		rc = zmq_msg_close(&msg);
 		if (rc != 0) {
@@ -412,12 +418,6 @@ printf("messagesize %d\n",message_size);
 			return -1;
 		}
 
-		latency = (double) elapsed / (roundtrip_count * 2);
-
-		printf("Package loss: %f %% \n",
-				100
-						- (((float) roundtrip_count) / ((float) roundtrip_count))
-								* 100);
 
 		rc = zmq_close(s);
 		if (rc != 0) {
