@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
 				return -1;
 			}
 			elapsed = zmq_stopwatch_stop(watch);
-			printf("latency:%d",elapsed);
+			printf("latency:%lu\n",elapsed);
 			elapsed = 0;
 		}
 
@@ -406,7 +406,7 @@ int main(int argc, char *argv[]) {
 				return -1;
 			}
 			elapsed = zmq_stopwatch_stop(watch);
-			printf("latency:%d",elapsed);
+			printf("latency:%lu\n",elapsed);
 			elapsed = 0;
 		}
 
