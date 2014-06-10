@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		s = zmq_socket(ctx, ZMQ_PULL);
+		s = zmq_socket(ctx, ZMQ_REP);
 		if (!s) {
 			printf("error in zmq_socket: %s\n", zmq_strerror(errno));
 			return -1;
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		s = zmq_socket(ctx, ZMQ_PUSH);
+		s = zmq_socket(ctx, ZMQ_REQ);
 		if (!s) {
 			printf("error in zmq_socket: %s\n", zmq_strerror(errno));
 			return -1;
