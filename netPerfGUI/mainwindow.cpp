@@ -37,8 +37,17 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::read(){
     QString pingOutput = ping->readAllStandardOutput();
-    qDebug()<< pingOutput;
-
+    qDebug()<<"[";
+    //qDebug()<< pingOutput;
+    QStringList pingList = pingOutput.split("latency:");
+    long sum = 0;
+    for(int i=0;i<pingList.size();i++){
+       long ping = pingList.at(i).toInt();
+       sum += ping;
+    }
+    long prom = sum/pingList.size();
+    if(prom != 0)
+        this->ui->pingLine->setText(QString::number(prom));
 }
 
 
