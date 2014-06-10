@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 		}
 
 	} else if (atoi(argv[4]) == 2) { //Remote Ping
-		cout << "!!!Remote Ping!!!" << endl;
+        //cout << "!!!Remote Ping!!!" << endl;
 
 		const char *connect_to;
 		void *watch;

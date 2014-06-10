@@ -30,7 +30,7 @@ void MainWindow::on_pushButton_clicked()
     QStringList args;
     args << "tcp://192.168.0.108:7770" << "29" << "100" << "2";
     //QString program = "/home/jesus/qk";
-    QString program = "/home/jesus/Documents/Redes/NetworkingTool/netPerf/netPerf";
+    QString program = "/home/jesus/Workspace/NetworkingTool/netPerf/netPerf";
     ping->start(program,args);
 
 }
@@ -38,7 +38,18 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::read(){
     QString pingOutput = ping->readAllStandardOutput();
     qDebug()<< pingOutput;
-
+    QStringList pingList = pingOutput.split("latency:");
+    long sum = 0;
+    for(int i=0;i<pingList.size();i++){
+       long ping = pingList.at(i).toInt();
+       if(ping != 0){
+       qDebug()<<"ping seq="<<i<<": "<<ping;
+       sum += ping;
+       }
+    }
+    long prom = sum/pingList.size();
+    qDebug()<<"Average ping this test: "<<prom;
+    this->ui->pingLine->setText(QString::number(prom));
 }
 
 
