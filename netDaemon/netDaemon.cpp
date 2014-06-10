@@ -4,7 +4,6 @@
 int main(int argc, char **argv) {
 	//zmq parameters init
 
-	int roundtrip_count;
 	size_t message_size;
 	void *ctx;
 	void *s;
@@ -13,7 +12,6 @@ int main(int argc, char **argv) {
 	const char *bind_to;
 	bind_to = argv[1];
 	message_size = 29;
-	roundtrip_count = 100;
 
 	//zmq init
 	ctx = zmq_init(1);
@@ -43,21 +41,19 @@ int main(int argc, char **argv) {
 
 	while (true) {
 
-		for (int i = 0; i != roundtrip_count; i++) {
-			rc = zmq_recv(s, &msg, message_size, 0);
-			if (rc < 0) {
-				printf("error in zmq_recvmsg: %s\n", zmq_strerror(errno));
-				return -1;
-			}
-			if (zmq_msg_size(&msg) != message_size) {
-				printf("message of incorrect size received\n");
-				return -1;
-			}
-			rc = zmq_send(s, &msg, message_size, 0);
-			if (rc < 0) {
-				printf("error in zmq_sendmsg: %s\n", zmq_strerror(errno));
-				return -1;
-			}
+		rc = zmq_recv(s, &msg, message_size, 0);
+		if (rc < 0) {
+			printf("error in zmq_recvmsg: %s\n", zmq_strerror(errno));
+			return -1;
+		}
+		if (zmq_msg_size(&msg) != message_size) {
+			printf("message of incorrect size received\n");
+			return -1;
+		}
+		rc = zmq_send(s, &msg, message_size, 0);
+		if (rc < 0) {
+			printf("error in zmq_sendmsg: %s\n", zmq_strerror(errno));
+			return -1;
 		}
 	}
 
