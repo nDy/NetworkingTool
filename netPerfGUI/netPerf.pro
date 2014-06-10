@@ -1,14 +1,12 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2014-05-31T16:45:43
+# Project created by QtCreator 2014-06-08T16:04:16
 #
 #-------------------------------------------------
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = uNet
+TARGET = nerPerfGUI
 TEMPLATE = app
 
 
@@ -19,4 +17,5 @@ HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
 
-LIBS += -lzmq
+RESOURCES += \
+    res.qrc
