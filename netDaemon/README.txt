@@ -1,15 +1,27 @@
+Instrucciones de instalacion:
+	Dependencias requeridas:
+		ZeroMQ: libzmq
+
+		ZeroMQ es la biblioteca usada para manejar las funciones de red.
+
+	Para compilar:
+		Reemplazar client con el nombre deseado y en -L/XXX reemplazar por la ubicacion de la biblioteca ZeroMQ:
+		Utilizando Clang:
+			clang -Wall netDaemon.cpp -o netDaemon -L/usr/local/lib -lzmq
+
+		Si desea usar g++ como alternativa a Clang para compilar:
+			g++ -Wall netDaemon.cpp -o netDaemon -L/usr/local/lib -lzmq
+
 Instrucciones de uso:
 
 ./client ARG1
 
 ARG1:
-	Para locale (ARG4==1||ARG4==3):
-		Debe contener el protocolo, la interfaz y el puerto que se utilizaran en la prueba, ej:
-			tcp://wlan0:5555
+	Debe contener el protocolo, la interfaz y el puerto que se utilizaran en la prueba, ej:
+		tcp://wlan0:5555
 
-Ejemplo de uso (para medicion de latencia):
-	Para modo local:
-		./netDaemon tcp://wlan0:5555
+Ejemplo de uso:
+	./netDaemon tcp://wlan0:5555
 
 Limitaciones:
 	El demo ha sido probado solo con TCP en su totalidad, al parecer UDP no es soportado 

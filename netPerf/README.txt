@@ -7,10 +7,10 @@ Instrucciones de instalacion:
 	Para compilar:
 		Reemplazar client con el nombre deseado y en -L/XXX reemplazar por la ubicacion de la biblioteca ZeroMQ:
 		Utilizando Clang:
-			clang -Wall ProyectoRedes.cpp -o client -L/usr/local/lib -lzmq
+			clang -Wall netPerf.cpp -o netPerf -L/usr/local/lib -lzmq
 
 		Si desea usar g++ como alternativa a Clang para compilar:
-			g++ -Wall ProyectoRedes.cpp -o client -L/usr/local/lib -lzmq
+			g++ -Wall netPerf.cpp -o netPerf -L/usr/local/lib -lzmq
 
 Instrucciones de uso:
 
@@ -41,9 +41,9 @@ ARG4:
 
 Ejemplo de uso (para medicion de latencia):
 	Para modo local:
-		./client tcp://wlan0:5555 1 1000 1
+		./netPerf tcp://wlan0:5555 1 1000 1
 	Para modo remoto:
-		./client tcp://192.168.0.108:5555 1 1000 2
+		./netPerf tcp://192.168.0.108:5555 1 1000 2
 
 Limitaciones:
 	El demo ha sido probado solo con TCP en su totalidad, al parecer UDP no es soportado 
