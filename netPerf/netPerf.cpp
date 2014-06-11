@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 		}
 
 	} else if (atoi(argv[4]) == 2) { //Remote Ping
-        //cout << "!!!Remote Ping!!!" << endl;
+        	//cout << "!!!Remote Ping!!!" << endl;
 
 		const char *connect_to;
 		void *watch;
@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 	} else if (atoi(argv[4]) == 4) { //Remote Throughput
-
+		//cout << "!!!Remote Throughput!!!" << endl;
 		const char *connect_to;
 
 		int message_count;
@@ -306,7 +306,7 @@ int main(int argc, char *argv[]) {
 			printf("error in zmq_msg_init_size: %s\n", zmq_strerror(errno));
 			return -1;
 		}
-//watch
+
 		watch = zmq_stopwatch_start();
 		for (i = 0; i != message_count; i++) {
 			
@@ -332,11 +332,7 @@ int main(int argc, char *argv[]) {
 				* 1000000);
 		megabits = (double) (throughput * message_size * 8) / 1000000;
 
-        //printf("message size: %d [B]\n", (int) message_size);
-        //printf("message count: %d\n", (int) message_count);
-        //printf("mean throughput: %d [msg/s]\n", (int) throughput);
-        //printf("mean throughput: %.3f [Mb/s]\n", (double) megabits);
-        printf("%.3f",megabits);
+	        printf("Throughput:%.3f",megabits);
 
 		rc = zmq_close(s);
 
