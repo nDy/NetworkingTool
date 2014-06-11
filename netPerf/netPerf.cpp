@@ -200,7 +200,6 @@ int main(int argc, char *argv[]) {
 
 		const char *bind_to;
 		int message_count;
-		void *watch;
 		
 		bind_to = argv[1];
 		message_size = atoi(argv[2]);
@@ -351,7 +350,6 @@ int main(int argc, char *argv[]) {
 		const char *connect_to;
 		void *watch;
 		unsigned long elapsed;
-		double latency;
 
 		connect_to = argv[1];
 		message_size = atoi(argv[2]);
