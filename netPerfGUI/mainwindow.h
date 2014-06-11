@@ -17,11 +17,17 @@ public:
     
 private slots:
     void on_pushButton_clicked();
-    void read();
+    void readPing();
+    void readTp();
     void readError();
     void on_pushButton_2_clicked();
+
+    void startPing();
+    void startTp();
+
     void startedProperly();
-    void finished(int,QProcess::ExitStatus);
+    void finishedPing(int,QProcess::ExitStatus);
+    void finishedTp(int,QProcess::ExitStatus);
     void error(QProcess::ProcessError);
 
 signals:
@@ -31,6 +37,7 @@ signals:
 private:
     Ui::MainWindow *ui;
     QProcess *ping;
+    QProcess *tp;
 };
 
 #endif // MAINWINDOW_H

@@ -8,15 +8,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ping = new QProcess();
-    connect(ping,SIGNAL(readyReadStandardOutput()),this,SLOT(read()));
-    connect(ping,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
 
-    connect(this,SIGNAL(stopPing()),ping,SLOT(terminate()));
+    ping = new QProcess();
+    tp = new QProcess();
+
+    connect(ping,SIGNAL(readyReadStandardOutput()),this,SLOT(readPing()));
+    connect(tp,SIGNAL(readyReadStandardOutput()),this,SLOT(readTp()));
+
+    connect(ping,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
+    connect(tp,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
+
+    connect(this,SIGNAL(stopPing()),ping,SLOT(terminate())); //this should be fixed
 
     connect(ping,SIGNAL(started()),this,SLOT(startedProperly()));
-    connect(ping,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(finished(int,QProcess::ExitStatus)));
+    connect(tp,SIGNAL(started()),this,SLOT(startedProperly()));
+
+    connect(ping,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(finishedPing(int,QProcess::ExitStatus)));
+    connect(tp,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(finishedTp(int,QProcess::ExitStatus)));
+
     connect(ping,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
+    connect(tp,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
 }
 
 MainWindow::~MainWindow(){
@@ -24,18 +35,33 @@ MainWindow::~MainWindow(){
     delete ui;
 }
 
-void MainWindow::on_pushButton_clicked()
-{
-    //ping with nerperf
+void MainWindow::startPing(){
+
+    //ping with netPerf
     QStringList args;
-    args << "tcp://192.168.0.108:7770" << "29" << "100" << "2";
-    //QString program = "/home/jesus/qk";
+    QString ip="192.168.0.108";
+    QString port="7770";
+    args << "tcp://"+ip+":"+port << "29" << "100" << "2";
     QString program = "/home/jesus/Workspace/NetworkingTool/netPerf/netPerf";
     ping->start(program,args);
-
 }
 
-void MainWindow::read(){
+void MainWindow::startTp(){
+    //ping with netPerf
+    QStringList args;
+    QString ip="192.168.0.108";
+    QString port="7771";
+    args << "tcp://"+ip+":"+port << "29" << "100000" << "4";
+    QString program = "/home/jesus/Workspace/NetworkingTool/netPerf/netPerf";
+    tp->start(program,args);
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    startPing();
+}
+
+void MainWindow::readPing(){
     QString pingOutput = ping->readAllStandardOutput();
     qDebug()<< pingOutput;
     QStringList pingList = pingOutput.split("latency:");
@@ -52,6 +78,13 @@ void MainWindow::read(){
     this->ui->pingLine->setText(QString::number(prom));
 }
 
+void MainWindow::readTp(){
+    QString tpOutput = tp->readAllStandardOutput();
+    qDebug()<<tpOutput;
+    float tp = tpOutput.mid(11).toFloat();
+    ui->tpLine->setText(QString::number(tp)); //I swear there is a good reason for this, you will see guys
+}
+
 
 
 void MainWindow::on_pushButton_2_clicked()
@@ -64,14 +97,21 @@ void MainWindow::startedProperly(){
 }
 
 void MainWindow::readError(){
-    QString input = ping->readAllStandardError();
+    qDebug()<<ping->readAllStandardError();
 
 }
 
-void MainWindow::finished(int exitCode, QProcess::ExitStatus status){
-    qDebug()<<"process finished with exitCode"<<exitCode;
+void MainWindow::finishedPing(int exitCode, QProcess::ExitStatus status){
+    qDebug()<<"process (ping) finished with exitCode"<<exitCode;
     if(exitCode==0){
-        on_pushButton_clicked();
+        startTp();
+    }
+}
+
+void MainWindow::finishedTp(int exitCode, QProcess::ExitStatus status){
+    qDebug()<<"process (throughput) finished with exitCode"<<exitCode;
+    if(exitCode==0){
+        //setup a timer to run the test again.
     }
 }
 
