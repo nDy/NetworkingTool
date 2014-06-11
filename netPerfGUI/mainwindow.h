@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QProcess>
 #include <QVector>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -21,9 +22,15 @@ private:
     QVector<double> avgPing;
     QVector<double> tpList;
     QVector<double> testTime;
+
+    QTimer* timer;
+    int interval;
+    bool stopRequested;
+
     long maxPing;
     long maxAvgPing;
     int numTests;
+
     void initPlot();
     void updatePlot();
     void startPing();
@@ -41,6 +48,8 @@ private slots:
     void finishedPing(int,QProcess::ExitStatus);
     void finishedTp(int,QProcess::ExitStatus);
     void error(QProcess::ProcessError);
+
+    void on_intervalField_editingFinished();
 
 signals:
     void stopPing();

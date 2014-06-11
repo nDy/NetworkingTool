@@ -11,6 +11,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ping = new QProcess();
     tp = new QProcess();
+    timer = new QTimer();
+    numTests = 0;
+    maxPing = 0;
+    maxAvgPing = 0;
+    stopRequested = false;
 
     connect(ping,SIGNAL(readyReadStandardOutput()),this,SLOT(readPing()));
     connect(tp,SIGNAL(readyReadStandardOutput()),this,SLOT(readTp()));
@@ -29,9 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ping,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
     connect(tp,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
 
-    numTests = 0;
-    maxPing = 0;
-    maxAvgPing = 0;
+    connect(timer,SIGNAL(timeout()),this,SLOT(on_startButton_clicked()));
+
+
     initPlot();
 }
 
@@ -42,6 +47,7 @@ MainWindow::~MainWindow(){
 
 void MainWindow::startPing(){
 
+    qDebug()<<"starting test:"<<numTests+1;
     //ping with netPerf
     QStringList args;
     QString ip=ui->ipField->text();
@@ -104,7 +110,12 @@ void MainWindow::readTp(){
 
 void MainWindow::on_stopButton_clicked()
 {
-    emit stopPing();
+    if(timer->isActive()){
+        timer->stop();
+        ui->startButton->setEnabled(true);
+    }else{
+        stopRequested = true;
+    }
 }
 
 void MainWindow::startedProperly(){
@@ -125,14 +136,16 @@ void MainWindow::finishedPing(int exitCode, QProcess::ExitStatus status){
 
 void MainWindow::finishedTp(int exitCode, QProcess::ExitStatus status){
     qDebug()<<"process (throughput) finished with exitCode"<<exitCode;
-    if(exitCode==0){
-
-    }
-    //setup a timer to run the test again.
     //update graph
     updatePlot();
-    //enable start
-    ui->startButton->setEnabled(true);
+    if(stopRequested){
+        //enable start
+        ui->startButton->setEnabled(true);
+        stopRequested = false;
+    }else{ //setup a timer to run the test again with given interval.
+        timer->start(interval);
+    }
+    qDebug()<<"test finished properly";
 }
 
 void MainWindow::error(QProcess::ProcessError errorCode){
@@ -173,4 +186,13 @@ void MainWindow::updatePlot(){
 
     ui->tpPlotter->xAxis->setRange(0, numTests+1); //increase as we make more tests
     ui->tpPlotter->replot();
+}
+
+void MainWindow::on_intervalField_editingFinished()
+{
+    interval = ui->intervalField->time().second() +
+            ui->intervalField->time().minute()*60 +
+            ui->intervalField->time().hour()*3600;
+    interval = interval*1000;
+    qDebug()<<"interval between tests is: "<<interval<<"(ms)";
 }
