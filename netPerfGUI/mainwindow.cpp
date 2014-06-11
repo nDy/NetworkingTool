@@ -97,6 +97,7 @@ void MainWindow::readTp(){
     qDebug()<<tpOutput;
     float tp = tpOutput.mid(11).toFloat();
     ui->tpLine->setText(QString::number(tp)); //I swear there is a good reason for this, you will see guys
+    tpList.append(tp);
 }
 
 
@@ -148,8 +149,16 @@ void MainWindow::initPlot(){
     ui->plotter->yAxis->setLabel("Latency(us)");
     // set axes ranges
     ui->plotter->xAxis->setRange(0, 1); //increase as we make more tests
-    ui->plotter->yAxis->setRange(0, 2000); //set max range as maximum ping!!!!
+    ui->plotter->yAxis->setRange(0, 2000); //set max range as maximum avg ping!!!!
     ui->plotter->replot();
+
+    ui->tpPlotter->addGraph();
+    ui->tpPlotter->xAxis->setLabel("Test num");
+    ui->tpPlotter->yAxis->setLabel("Throughput(mb/s)");
+    // set axes ranges
+    ui->tpPlotter->xAxis->setRange(0, 1); //increase as we make more tests
+    ui->tpPlotter->yAxis->setRange(0, 10); //set max range as 10 because that's the wlan0 iface limit
+    ui->tpPlotter->replot();
 }
 
 void MainWindow::updatePlot(){
@@ -159,4 +168,9 @@ void MainWindow::updatePlot(){
     ui->plotter->xAxis->setRange(0, numTests+1); //increase as we make more tests
     ui->plotter->yAxis->setRange(0, maxAvgPing); //set max range as maximum ping!!!!
     ui->plotter->replot();
+
+    ui->tpPlotter->graph(0)->setData(testTime,tpList);
+
+    ui->tpPlotter->xAxis->setRange(0, numTests+1); //increase as we make more tests
+    ui->tpPlotter->replot();
 }

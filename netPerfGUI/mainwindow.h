@@ -19,6 +19,7 @@ public:
 
 private:
     QVector<double> avgPing;
+    QVector<double> tpList;
     QVector<double> testTime;
     long maxPing;
     long maxAvgPing;
