@@ -240,8 +240,6 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		watch = zmq_stopwatch_start();
-
 		for (i = 0; i != message_count - 1; i++) {
 			rc = zmq_recv(s, &msg,message_size, 0);
 			if (rc < 0) {
@@ -253,8 +251,6 @@ int main(int argc, char *argv[]) {
 				return -1;
 			}
 		}
-
-		zmq_stopwatch_stop(watch);
 
 		rc = zmq_msg_close(&msg);
 		if (rc != 0) {
@@ -347,13 +343,13 @@ int main(int argc, char *argv[]) {
 			printf("error in zmq_close: %s\n", zmq_strerror(errno));
 			return -1;
 		}
-
+		printf("cierra el puerto");
 		rc = zmq_term(ctx);
 		if (rc != 0) {
 			printf("error in zmq_term: %s\n", zmq_strerror(errno));
 			return -1;
 		}
-
+		printf("cierra el zmq");
 	} else if (atoi(argv[4]) == 6) { //Remote Ping
 		cout << "!!!Remote Package Loss!!!" << endl;
 
