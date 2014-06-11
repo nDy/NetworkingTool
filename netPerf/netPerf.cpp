@@ -1,8 +1,8 @@
 /*
- * ProyectoRedesO.cpp
+ * netPerf.cpp
  *
- *  Created on: Nov 21, 2013
- *      Author: ndy
+ *      Cliente de terminal para medir estadisticas de una red.
+ *      Author: nDy, jesus2660, porcar
  */
 
 #include <iostream>
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	int rc;
 	int i;
 	zmq_msg_t msg;
-//Tried switch but returns redefined variables on bind_to and similar
+
 	if (atoi(argv[4]) == 1 || atoi(argv[4]) == 5) { //Local Ping & pkg loss
 		if (atoi(argv[4]) == 1)
 			cout << "!!!Local Ping!!!" << endl;
