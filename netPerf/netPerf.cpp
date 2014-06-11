@@ -270,7 +270,6 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 	} else if (atoi(argv[4]) == 4) { //Remote Throughput
-		cout << "!!!Remote Throughput!!!" << endl;
 
 		const char *connect_to;
 
@@ -333,23 +332,23 @@ int main(int argc, char *argv[]) {
 				* 1000000);
 		megabits = (double) (throughput * message_size * 8) / 1000000;
 
-		printf("message size: %d [B]\n", (int) message_size);
-		printf("message count: %d\n", (int) message_count);
-		printf("mean throughput: %d [msg/s]\n", (int) throughput);
-		printf("mean throughput: %.3f [Mb/s]\n", (double) megabits);
+        //printf("message size: %d [B]\n", (int) message_size);
+        //printf("message count: %d\n", (int) message_count);
+        //printf("mean throughput: %d [msg/s]\n", (int) throughput);
+        //printf("mean throughput: %.3f [Mb/s]\n", (double) megabits);
+        printf("%.3f",megabits);
 
 		rc = zmq_close(s);
+
 		if (rc != 0) {
 			printf("error in zmq_close: %s\n", zmq_strerror(errno));
 			return -1;
 		}
-		printf("cierra el puerto");
 		rc = zmq_term(ctx);
 		if (rc != 0) {
 			printf("error in zmq_term: %s\n", zmq_strerror(errno));
 			return -1;
 		}
-		printf("cierra el zmq");
 	} else if (atoi(argv[4]) == 6) { //Remote Ping
 		cout << "!!!Remote Package Loss!!!" << endl;
 
