@@ -28,6 +28,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ping,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
     connect(tp,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
+
+    numTests = 0;
+    maxPing = 0;
+    maxAvgPing = 0;
+    initPlot();
 }
 
 MainWindow::~MainWindow(){
@@ -39,8 +44,8 @@ void MainWindow::startPing(){
 
     //ping with netPerf
     QStringList args;
-    QString ip="192.168.0.108";
-    QString port="7770";
+    QString ip=ui->ipField->text();
+    QString port=ui->portPingField->text();
     args << "tcp://"+ip+":"+port << "29" << "100" << "2";
     QString program = "/home/jesus/Workspace/NetworkingTool/netPerf/netPerf";
     ping->start(program,args);
@@ -49,16 +54,17 @@ void MainWindow::startPing(){
 void MainWindow::startTp(){
     //ping with netPerf
     QStringList args;
-    QString ip="192.168.0.108";
-    QString port="7771";
+    QString ip=ui->ipField->text();
+    QString port=ui->portTpField->text();
     args << "tcp://"+ip+":"+port << "29" << "100000" << "4";
     QString program = "/home/jesus/Workspace/NetworkingTool/netPerf/netPerf";
     tp->start(program,args);
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_startButton_clicked()
 {
     startPing();
+    ui->startButton->setEnabled(false);
 }
 
 void MainWindow::readPing(){
@@ -70,11 +76,19 @@ void MainWindow::readPing(){
        long ping = pingList.at(i).toInt();
        if(ping != 0){
        qDebug()<<"ping seq="<<i<<": "<<ping;
+       if(ping>maxPing)
+           maxPing=ping;
        sum += ping;
        }
     }
+
     long prom = sum/pingList.size();
     qDebug()<<"Average ping this test: "<<prom;
+    if(maxAvgPing<prom){
+        maxAvgPing = prom;
+    }
+    avgPing.append(prom);
+    testTime.append(numTests++);
     this->ui->pingLine->setText(QString::number(prom));
 }
 
@@ -87,7 +101,7 @@ void MainWindow::readTp(){
 
 
 
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::on_stopButton_clicked()
 {
     emit stopPing();
 }
@@ -111,12 +125,38 @@ void MainWindow::finishedPing(int exitCode, QProcess::ExitStatus status){
 void MainWindow::finishedTp(int exitCode, QProcess::ExitStatus status){
     qDebug()<<"process (throughput) finished with exitCode"<<exitCode;
     if(exitCode==0){
-        //setup a timer to run the test again.
+
     }
+    //setup a timer to run the test again.
+    //update graph
+    updatePlot();
+    //enable start
+    ui->startButton->setEnabled(true);
 }
 
 void MainWindow::error(QProcess::ProcessError errorCode){
     if(errorCode==QProcess::FailedToStart){
         qDebug()<<"process failed to start!";
     }
+}
+
+void MainWindow::initPlot(){
+
+    //label the axes
+    ui->plotter->addGraph();
+    ui->plotter->xAxis->setLabel("Test num");
+    ui->plotter->yAxis->setLabel("Latency(us)");
+    // set axes ranges
+    ui->plotter->xAxis->setRange(0, 1); //increase as we make more tests
+    ui->plotter->yAxis->setRange(0, 2000); //set max range as maximum ping!!!!
+    ui->plotter->replot();
+}
+
+void MainWindow::updatePlot(){
+
+    ui->plotter->graph(0)->setData(testTime,avgPing);
+
+    ui->plotter->xAxis->setRange(0, numTests+1); //increase as we make more tests
+    ui->plotter->yAxis->setRange(0, maxAvgPing); //set max range as maximum ping!!!!
+    ui->plotter->replot();
 }

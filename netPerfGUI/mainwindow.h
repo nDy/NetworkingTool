@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QProcess>
+#include <QVector>
+
 namespace Ui {
 class MainWindow;
 }
@@ -14,16 +16,25 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    
+
+private:
+    QVector<double> avgPing;
+    QVector<double> testTime;
+    long maxPing;
+    long maxAvgPing;
+    int numTests;
+    void initPlot();
+    void updatePlot();
+    void startPing();
+    void startTp();
+
 private slots:
-    void on_pushButton_clicked();
+    void on_startButton_clicked();
+    void on_stopButton_clicked();
+
     void readPing();
     void readTp();
     void readError();
-    void on_pushButton_2_clicked();
-
-    void startPing();
-    void startTp();
 
     void startedProperly();
     void finishedPing(int,QProcess::ExitStatus);
