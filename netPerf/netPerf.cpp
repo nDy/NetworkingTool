@@ -306,27 +306,30 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
+		rc = zmq_msg_init_size(&msg, message_size);
+		if (rc != 0) {
+			printf("error in zmq_msg_init_size: %s\n", zmq_strerror(errno));
+			return -1;
+		}
 //watch
 		watch = zmq_stopwatch_start();
 		for (i = 0; i != message_count; i++) {
-			rc = zmq_msg_init_size(&msg, message_size);
-			if (rc != 0) {
-				printf("error in zmq_msg_init_size: %s\n", zmq_strerror(errno));
-				return -1;
-			}
+			
 			rc = zmq_send(s, &msg,message_size, 0);
 			if (rc < 0) {
 				printf("error in zmq_sendmsg: %s\n", zmq_strerror(errno));
 				return -1;
 			}
-			rc = zmq_msg_close(&msg);
-			if (rc != 0) {
-				printf("error in zmq_msg_close: %s\n", zmq_strerror(errno));
-				return -1;
-			}
 		}
 
 		elapsed = zmq_stopwatch_stop(watch);
+
+		rc = zmq_msg_close(&msg);
+		if (rc != 0) {
+			printf("error in zmq_msg_close: %s\n", zmq_strerror(errno));
+			return -1;
+		}
+
 		if (elapsed == 0)
 			elapsed = 1;
 		
