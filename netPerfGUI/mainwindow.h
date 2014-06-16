@@ -24,7 +24,6 @@ private:
     QVector<double> testTime;
 
     QTimer* timer;
-    int interval;
     bool stopRequested;
 
     long maxPing;
@@ -33,8 +32,8 @@ private:
 
     void initPlot();
     void updatePlot();
-    void startPing();
-    void startTp();
+    void startTest();
+    int getInterval();
 
 private slots:
     void on_startButton_clicked();
@@ -49,10 +48,15 @@ private slots:
     void finishedTp(int,QProcess::ExitStatus);
     void error(QProcess::ProcessError);
 
-    void on_intervalField_editingFinished();
+    void on_protocolField_currentIndexChanged(int index);
+
+    void startPing();
+    void startTp();
 
 signals:
     void stopPing();
+    void startTpSignal();
+
 
 
 private:
