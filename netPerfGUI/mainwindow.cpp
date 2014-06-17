@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 
 #include<QDebug>
-double sum;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -11,34 +10,33 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     ping = new QProcess();
-    tp = new QProcess();
+    iperf = new QProcess();
     timer = new QTimer();
+    timer->setSingleShot(true);
+
     numTests = 0;
-    maxPing = 0;
-    maxAvgPing = 0;
-    stopRequested = false;
-
-    connect(ping,SIGNAL(readyReadStandardOutput()),this,SLOT(readPing()));
-    connect(tp,SIGNAL(readyReadStandardOutput()),this,SLOT(readTp()));
-
-    connect(ping,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
-    connect(tp,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
-
-    connect(this,SIGNAL(stopPing()),ping,SLOT(terminate())); //this should be fixed
-    connect(this,SIGNAL(startTpSignal()),this,SLOT(startTp()));
-
-    connect(ping,SIGNAL(started()),this,SLOT(startedProperly()));
-    connect(tp,SIGNAL(started()),this,SLOT(startedProperly()));
-
-    connect(ping,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(finishedPing(int,QProcess::ExitStatus)));
-    connect(tp,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(finishedTp(int,QProcess::ExitStatus)));
-
-    connect(ping,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
-    connect(tp,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
-
-    connect(timer,SIGNAL(timeout()),this,SLOT(on_startButton_clicked()));
 
     ui->udpBandwidthField->hide();
+
+    connect(ping,SIGNAL(readyReadStandardOutput()),this,SLOT(readPingOutput()));
+    connect(iperf,SIGNAL(readyReadStandardOutput()),this,SLOT(readIperfOutput()));
+
+    connect(ping,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
+    connect(iperf,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
+
+    connect(this,SIGNAL(stopTest()),ping,SLOT(terminate())); //this should be fixed
+
+    connect(ping,SIGNAL(started()),this,SLOT(processStarted()));
+    connect(iperf,SIGNAL(started()),this,SLOT(processStarted()));
+
+    connect(ping,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(pingFinished(int,QProcess::ExitStatus)));
+    connect(iperf,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(iperfFinished(int,QProcess::ExitStatus)));
+
+    connect(ping,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
+    connect(iperf,SIGNAL(error(QProcess::ProcessError)),this,SLOT(error(QProcess::ProcessError)));
+
+    connect(timer,SIGNAL(timeout()),this,SLOT(startPing()));
+
     initPlot();
 }
 
@@ -60,19 +58,28 @@ void MainWindow::startPing(){
 }
 
 
-void MainWindow::startTp(){
+void MainWindow::startIperf(){
     //iperf test
     QStringList args;
     QString ip=ui->ipField->text();
     QString port=ui->portField->text();
 
     //add arguments to iperf
-    args << "-c" << ip <<"-p"<< port;
+    args << "-c" << ip <<"-p"<< port<< "-f"<<"m";
     if(ui->protocolField->currentIndex()==1){
         args << "-u" << "-b" << QString::number(ui->udpBandwidthField->value())+'m';
     }
     QString program = "iperf";
-    tp->start(program,args);
+    iperf->start(program,args);
+}
+
+void MainWindow::stopTest(){
+    ui->ipField->setEnabled(true);
+    ui->protocolField->setEnabled(true);
+    ui->udpBandwidthField->setEnabled(true);
+    ui->intervalField->setEnabled(true);
+    ui->portField->setEnabled(true);
+    ui->startButton->setEnabled(true);
 }
 
 void MainWindow::startTest(){
@@ -81,16 +88,21 @@ void MainWindow::startTest(){
     ui->udpBandwidthField->setEnabled(false);
     ui->intervalField->setEnabled(false);
     ui->portField->setEnabled(false);
+
+    maxPing = 0;
+    maxTp = 0;
+    sum = 0;
+    stopRequested = false;
 }
 
 
 void MainWindow::on_startButton_clicked()
 {
     qDebug()<<"on start button clicked was called for some reason";
-    if(ping->state()==QProcess::Running||tp->state()==QProcess::Running){
+    if(ping->state()==QProcess::Running||iperf->state()==QProcess::Running){
         if(ping->state()==QProcess::Running)
             qDebug()<<"ping still running";
-        if(tp->state()==QProcess::Running)
+        if(iperf->state()==QProcess::Running)
                 qDebug()<<"tp still running";
         return;
     }
@@ -100,7 +112,7 @@ void MainWindow::on_startButton_clicked()
     ui->startButton->setEnabled(false);
 }
 
-void MainWindow::readPing(){
+void MainWindow::readPingOutput(){
     qDebug()<<"reading ping output:";
     QString pingOutput = ping->readAllStandardOutput();
     qDebug()<< pingOutput;
@@ -113,16 +125,22 @@ void MainWindow::readPing(){
     sum += ping;
 }
 
-void MainWindow::readTp(){
+void MainWindow::readIperfOutput(){
     qDebug()<<"reading tp output:";
-    QString tpOutput = tp->readAllStandardOutput();
+    QString tpOutput = iperf->readAllStandardOutput();
     qDebug()<<tpOutput;
+    float tp=0;
     if(ui->protocolField->currentIndex()==0){ //tcp test
-        if(tpOutput.indexOf("Mbits/sec")!=-1){
+        if(tpOutput.indexOf("Bandwidth")!=-1){
             QStringList tokens = tpOutput.split(" ");
-            ui->tpLine->setText(tokens.at(24)+" "+tokens.at(25));
-            float tp = tokens.at(24).toFloat();
-            tpList.append(tp);
+            for(int i=0;i<tokens.size();i++){
+                if(tokens.at(i).contains("/sec")){
+                    ui->tpLine->setText(tokens.at(i-1)+" "+tokens.at(i));
+                    tp = tokens.at(i-1).toFloat();
+                }
+            }
+
+            tpVector.append(tp);
         }
     }else{ //udp test
         if(tpOutput.indexOf("Server Report:")!=-1){
@@ -132,8 +150,8 @@ void MainWindow::readTp(){
             //18 is Jitter
             //19 is Jitter unit
             //lost/send DG 21,22
-            float tp = tokens.at(14).toFloat();
-            tpList.append(tp);
+            tp = tokens.at(14).toFloat();
+            tpVector.append(tp);
             ui->tpLine->setText(tokens.at(14)+" "+tokens.at(15));
             ui->jitterLine->setText(tokens.at(18)+" "+tokens.at(19));
             QString aux;
@@ -145,6 +163,9 @@ void MainWindow::readTp(){
             ui->datagramLossLine->setText(tokens.at(21)+tokens.at(22)+"  ("+QString::number(percentage,'f',2)+"%)");
         }
     }
+    if(tp>maxTp){
+        maxTp=tp;
+    }
 }
 
 
@@ -153,52 +174,52 @@ void MainWindow::on_stopButton_clicked()
 {
     if(timer->isActive()){
         timer->stop();
-        ui->startButton->setEnabled(true);
+        stopTest();
     }else{
         stopRequested = true;
     }
 }
 
-void MainWindow::startedProperly(){
+void MainWindow::processStarted(){
     qDebug()<<"The application started!";
 }
 
 void MainWindow::readError(){
     qDebug()<<"reading stderr";
     qDebug()<<ping->readAllStandardError();
-    qDebug()<<tp->readAllStandardError();
+    qDebug()<<iperf->readAllStandardError();
 
 }
 
-void MainWindow::finishedPing(int exitCode, QProcess::ExitStatus status){    
+void MainWindow::pingFinished(int exitCode, QProcess::ExitStatus status){
     qDebug()<<"process (ping) finished with exitCode"<<exitCode;
     if(exitCode==0){
         double prom = sum/10;
         qDebug()<<"Average ping this test: "<<prom;
-        if(maxAvgPing<prom){
-            maxAvgPing = prom;
+        if(maxPing<prom){
+            maxPing = prom;
         }
-        avgPing.append(prom);
-        testTime.append(numTests++);
+        pingVector.append(prom);
+        timeVector.append(numTests++);
         this->ui->pingLine->setText(QString::number(prom)+" ms");
     }else{
         //client isn't online error.
         qDebug()<<"host is not present or is bloquing ping";
     }
-    emit startTp();
+    updatePlot();
+    startIperf();
 
 }
 
-void MainWindow::finishedTp(int exitCode, QProcess::ExitStatus status){
+void MainWindow::iperfFinished(int exitCode, QProcess::ExitStatus status){
     qDebug()<<"process (throughput) finished with exitCode"<<exitCode;
     //update graph
     updatePlot();
     if(stopRequested){
         //enable start
-        ui->startButton->setEnabled(true);
         stopRequested = false;
+        stopTest();
     }else{ //setup a timer to run the test again with given interval.
-        timer->setSingleShot(true);
         timer->start(getInterval());
     }
     qDebug()<<"test finished properly";
@@ -211,7 +232,6 @@ void MainWindow::error(QProcess::ProcessError errorCode){
 }
 
 void MainWindow::initPlot(){
-
     //label the axes
     ui->plotter->addGraph();
     ui->plotter->xAxis->setLabel("Test num");
@@ -226,22 +246,22 @@ void MainWindow::initPlot(){
     ui->tpPlotter->yAxis->setLabel("Throughput(mb/s)");
     // set axes ranges
     ui->tpPlotter->xAxis->setRange(0, 1); //increase as we make more tests
-    ui->tpPlotter->yAxis->setRange(0, 10); //set max range as 10 because that's the wlan0 iface limit
+    ui->tpPlotter->yAxis->setRange(0, maxTp); //set max range as 10 because that's the wlan0 iface limit
     ui->tpPlotter->replot();
-
 }
 
 void MainWindow::updatePlot(){
 
-    ui->plotter->graph(0)->setData(testTime,avgPing);
+    ui->plotter->graph(0)->setData(timeVector,pingVector);
 
     ui->plotter->xAxis->setRange(0, numTests+1); //increase as we make more tests
-    ui->plotter->yAxis->setRange(0, maxAvgPing); //set max range as maximum ping!!!!
+    ui->plotter->yAxis->setRange(0, maxPing); //set max range as maximum ping!!!!
     ui->plotter->replot();
 
-    ui->tpPlotter->graph(0)->setData(testTime,tpList);
+    ui->tpPlotter->graph(0)->setData(timeVector,tpVector);
 
     ui->tpPlotter->xAxis->setRange(0, numTests+1); //increase as we make more tests
+    ui->tpPlotter->yAxis->setRange(0, maxTp);
     ui->tpPlotter->replot();
 }
 
@@ -257,7 +277,6 @@ int MainWindow::getInterval()
 
 void MainWindow::on_protocolField_currentIndexChanged(int index)
 {
-
     if(index==1){
         ui->udpBandwidthField->show();
     }else{

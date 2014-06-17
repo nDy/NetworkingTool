@@ -19,50 +19,49 @@ public:
     ~MainWindow();
 
 private:
-    QVector<double> avgPing;
-    QVector<double> tpList;
-    QVector<double> testTime;
+
+    Ui::MainWindow *ui;
+
+    QProcess *ping;
+    QProcess *iperf;
+
+    QVector<double> pingVector;
+    QVector<double> tpVector;
+    QVector<double> timeVector;
 
     QTimer* timer;
     bool stopRequested;
 
-    long maxPing;
-    long maxAvgPing;
+    float sum;
+    float maxPing;
+    float maxTp;
     int numTests;
 
     void initPlot();
     void updatePlot();
     void startTest();
+    void stopTest();
+    void finishTest();
+
     int getInterval();
 
 private slots:
+
     void on_startButton_clicked();
     void on_stopButton_clicked();
-
-    void readPing();
-    void readTp();
-    void readError();
-
-    void startedProperly();
-    void finishedPing(int,QProcess::ExitStatus);
-    void finishedTp(int,QProcess::ExitStatus);
-    void error(QProcess::ProcessError);
-
     void on_protocolField_currentIndexChanged(int index);
 
+    void readPingOutput();
+    void readIperfOutput();
+    void readError();
+
+    void processStarted();
+    void pingFinished(int,QProcess::ExitStatus);
+    void iperfFinished(int,QProcess::ExitStatus);
+    void error(QProcess::ProcessError);
+
     void startPing();
-    void startTp();
-
-signals:
-    void stopPing();
-    void startTpSignal();
-
-
-
-private:
-    Ui::MainWindow *ui;
-    QProcess *ping;
-    QProcess *tp;
+    void startIperf();
 };
 
 #endif // MAINWINDOW_H
