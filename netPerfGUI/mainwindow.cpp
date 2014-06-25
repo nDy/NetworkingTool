@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 
 #include<QDebug>
+#include <iostream>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -23,8 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ping,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
     connect(iperf,SIGNAL(readyReadStandardError()),this,SLOT(readError()));
-
-    connect(this,SIGNAL(stopTest()),ping,SLOT(terminate())); //this should be fixed
 
     connect(ping,SIGNAL(started()),this,SLOT(processStarted()));
     connect(iperf,SIGNAL(started()),this,SLOT(processStarted()));
@@ -48,6 +48,7 @@ MainWindow::~MainWindow(){
 void MainWindow::startPing(){
 
     qDebug()<<"starting test:"<<numTests+1;
+    ui->statusLabel->setText("TESTING");
     //ping
     QStringList args;
     QString ip=ui->ipField->text();
@@ -80,6 +81,7 @@ void MainWindow::stopTest(){
     ui->intervalField->setEnabled(true);
     ui->portField->setEnabled(true);
     ui->startButton->setEnabled(true);
+    ui->statusLabel->setText("STOPPED");
 }
 
 void MainWindow::startTest(){
@@ -98,7 +100,6 @@ void MainWindow::startTest(){
 
 void MainWindow::on_startButton_clicked()
 {
-    qDebug()<<"on start button clicked was called for some reason";
     if(ping->state()==QProcess::Running||iperf->state()==QProcess::Running){
         if(ping->state()==QProcess::Running)
             qDebug()<<"ping still running";
@@ -150,17 +151,32 @@ void MainWindow::readIperfOutput(){
             //18 is Jitter
             //19 is Jitter unit
             //lost/send DG 21,22
-            tp = tokens.at(14).toFloat();
-            tpVector.append(tp);
-            ui->tpLine->setText(tokens.at(14)+" "+tokens.at(15));
-            ui->jitterLine->setText(tokens.at(18)+" "+tokens.at(19));
-            QString aux;
-            aux =tokens.at(21);
-            aux.chop(1);
-            float lost = aux.toFloat();
-            float sent = tokens.at(22).toFloat();
-            float percentage = lost/sent;
-            ui->datagramLossLine->setText(tokens.at(21)+tokens.at(22)+"  ("+QString::number(percentage,'f',2)+"%)");
+            for(int i=0;i<tokens.size();i++){
+                if(tokens.at(i).contains("/sec")){
+                    tp = tokens.at(i-1).toFloat();
+                    tpVector.append(tp);
+                    ui->tpLine->setText(tokens.at(i-1)+" "+tokens.at(i));
+                }if(tokens.at(i).contains("ms")&&(!tokens.at(i).contains("datagrams"))){
+                    ui->jitterLine->setText(tokens.at(i-1)+" "+tokens.at(i));
+                }
+                if(tokens.at(i).contains("%")){
+                    QString aux;
+                    aux =tokens.at(i-2);
+                    aux.chop(1);
+                    float lost = aux.toFloat();
+                    std::cout<<aux.toStdString()<<"lost"<<std::endl;
+                    float sent = tokens.at(i-1).toFloat();
+                    float percentage;
+                    if(sent=!0){
+                        percentage = lost/sent;
+                    }else{
+                        percentage = 100.0;
+                    }
+                    std::cout<<tokens.at(i-1).toStdString()<<"sent"<<std::endl;
+                    ui->datagramLossLine->setText(tokens.at(i-2)+tokens.at(i-1)+"  ("+QString::number(percentage,'f',2)+"%)");
+                }
+            }
+
         }
     }
     if(tp>maxTp){
@@ -176,6 +192,7 @@ void MainWindow::on_stopButton_clicked()
         timer->stop();
         stopTest();
     }else{
+        ui->statusLabel->setText("STOPPING...");
         stopRequested = true;
     }
 }
@@ -186,8 +203,9 @@ void MainWindow::processStarted(){
 
 void MainWindow::readError(){
     qDebug()<<"reading stderr";
-    qDebug()<<ping->readAllStandardError();
-    qDebug()<<iperf->readAllStandardError();
+    QMessageBox *message = new QMessageBox(this);
+    message->setWindowTitle("Error");
+    message->setText(ping->readAllStandardError()+iperf->readAllStandardError());
 
 }
 
@@ -221,6 +239,7 @@ void MainWindow::iperfFinished(int exitCode, QProcess::ExitStatus status){
         stopTest();
     }else{ //setup a timer to run the test again with given interval.
         timer->start(getInterval());
+        ui->statusLabel->setText("WAITING");
     }
     qDebug()<<"test finished properly";
 }
